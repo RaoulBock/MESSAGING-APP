@@ -3,6 +3,7 @@
   <head>
     <title>Chat App</title>
     <script src="https://cdn.socket.io/4.3.2/socket.io.js"></script>
+    <script src="./utils/ApiServices.js"></script>
     <style>
       /* Add your CSS styles here */
       #login {
@@ -32,9 +33,21 @@
     <script>
       const socket = io();
 
-      function login() {
-        const username = document.getElementById("username").value;
-        const password = document.getElementById("password").value;
+      const login = async () => {
+        const user_password = document.getElementById("password").value;
+
+        try {
+          const response = await ApiServices.on_login({
+            phone_number: phone_number,
+          });
+
+          if (response) {
+            console.log(response);
+          } else {
+          }
+        } catch (err) {
+          console.log(err);
+        }
 
         socket.emit("login", { username, password });
 
@@ -46,7 +59,7 @@
         socket.on("login failed", () => {
           alert("Login failed. Please try again.");
         });
-      }
+      };
 
       function sendMessage() {
         const message = document.getElementById("input").value;
