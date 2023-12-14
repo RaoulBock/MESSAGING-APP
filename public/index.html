@@ -4,6 +4,8 @@
   <head>
     <title>Socket.io Chat App</title>
     <script src="/socket.io/socket.io.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/PapaParse/5.3.0/papaparse.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.13/xlsx.full.min.js"></script>
     <style>
       #dropArea {
         width: 300px;
@@ -45,14 +47,72 @@
               "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet" ||
             file.type === "text/csv"
           ) {
-            // Process the Excel file here, for example, you can upload it to a server or perform operations with it.
-            console.log("File name:", file.name);
-            console.log("File size:", file.size);
-            console.log("File type:", file.type);
+            const reader = new FileReader();
+
+            reader.onload = function (event) {
+              console.log("File name:", file.name);
+              console.log("File size:", file.size);
+              console.log("File type:", file.type);
+
+              if (file.type === "text/csv") {
+                const csvContent = event.target.result;
+                parseCSV(csvContent);
+              } else if (
+                file.type ===
+                "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet"
+              ) {
+                const workbook = XLSX.read(event.target.result, {
+                  type: "binary",
+                });
+                const excelJSON = parseExcel(workbook);
+                console.log("Excel content in JSON:", excelJSON);
+                sendDataToServer(excelJSON);
+              }
+            };
+
+            reader.readAsBinaryString(file);
           } else {
-            alert("Please drop an Excel file (.xlsx).");
+            alert("Please drop an Excel file (.xlsx) or a CSV file.");
           }
         }
+      }
+
+      function parseCSV(csvContent) {
+        Papa.parse(csvContent, {
+          header: true,
+          complete: function (results) {
+            console.log("CSV content in JSON:", results.data);
+            sendDataToServer(results.data);
+          },
+        });
+      }
+
+      function parseExcel(workbook) {
+        const result = {};
+        workbook.SheetNames.forEach(function (sheetName) {
+          const roa = XLSX.utils.sheet_to_json(workbook.Sheets[sheetName], {
+            header: 1,
+          });
+          if (roa.length) result[sheetName] = roa;
+        });
+        return result;
+      }
+
+      function sendDataToServer(data) {
+        fetch("/uploadData", {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json",
+          },
+          body: JSON.stringify({ data }),
+        })
+          .then((response) => response.json())
+          .then((data) => {
+            console.log("Server response:", data);
+          })
+          .catch((error) => {
+            console.error("Error:", error);
+          });
       }
 
       function dragOverHandler(e) {
