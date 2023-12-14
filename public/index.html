@@ -1,135 +1,43 @@
-<!-- index.html -->
-<!DOCTYPE html>
 <html>
   <head>
-    <title>Socket.io Chat App</title>
+    <title>User Registration</title>
+  </head>
+  <body>
+    <h2>User Registration</h2>
+    <form id="registrationForm">
+      <label for="phoneNumber">Phone Number:</label>
+      <input
+        type="text"
+        id="phoneNumber"
+        name="phoneNumber"
+        required
+      /><br /><br />
+
+      <label for="username">Username:</label>
+      <input type="text" id="username" name="username" required /><br /><br />
+
+      <button type="submit">Register</button>
+    </form>
+
     <script src="/socket.io/socket.io.js"></script>
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/PapaParse/5.3.0/papaparse.min.js"></script>
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.13/xlsx.full.min.js"></script>
-    <style>
-      #dropArea {
-        width: 300px;
-        height: 200px;
-        border: 2px dashed #aaa;
-        border-radius: 5px;
-        text-align: center;
-        padding: 20px;
-        margin: 20px auto;
-      }
-    </style>
     <script>
       const socket = io();
 
-      function sendMessage() {
-        const message = document.getElementById("message").value;
-        socket.emit("chat message", message);
-        document.getElementById("message").value = "";
-      }
+      document
+        .getElementById("registrationForm")
+        .addEventListener("submit", (event) => {
+          event.preventDefault();
+          const phoneNumber = document.getElementById("phoneNumber").value;
+          const username = document.getElementById("username").value;
+          socket.emit("register", { phoneNumber, username });
+          // Redirect or display a success message after registration
+          // For example: window.location.href = "/chat.html";
 
-      socket.on("chat message", (msg) => {
-        const messages = document.getElementById("messages");
-        const li = document.createElement("li");
-        li.appendChild(document.createTextNode(msg));
-        messages.appendChild(li);
-      });
-
-      function handleDrop(e) {
-        e.preventDefault();
-        const files = e.dataTransfer.files;
-        handleFiles(files);
-      }
-
-      function handleFiles(files) {
-        for (let i = 0; i < files.length; i++) {
-          const file = files[i];
-          if (
-            file.type ===
-              "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet" ||
-            file.type === "text/csv"
-          ) {
-            const reader = new FileReader();
-
-            reader.onload = function (event) {
-              console.log("File name:", file.name);
-              console.log("File size:", file.size);
-              console.log("File type:", file.type);
-
-              if (file.type === "text/csv") {
-                const csvContent = event.target.result;
-                parseCSV(csvContent);
-              } else if (
-                file.type ===
-                "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet"
-              ) {
-                const workbook = XLSX.read(event.target.result, {
-                  type: "binary",
-                });
-                const excelJSON = parseExcel(workbook);
-                console.log("Excel content in JSON:", excelJSON);
-                sendDataToServer(excelJSON);
-              }
-            };
-
-            reader.readAsBinaryString(file);
-          } else {
-            alert("Please drop an Excel file (.xlsx) or a CSV file.");
+          if (phoneNumber !== "" || username !== "") {
+            window.location.href = "/screens/messageScreen.html";
           }
-        }
-      }
-
-      function parseCSV(csvContent) {
-        Papa.parse(csvContent, {
-          header: true,
-          complete: function (results) {
-            //console.log("CSV content in JSON:", results.data);
-            sendDataToServer(results.data);
-          },
+          console.log("Something went wrong!.");
         });
-      }
-
-      function parseExcel(workbook) {
-        const result = {};
-        workbook.SheetNames.forEach(function (sheetName) {
-          const roa = XLSX.utils.sheet_to_json(workbook.Sheets[sheetName], {
-            header: 1,
-          });
-          if (roa.length) result[sheetName] = roa;
-        });
-        return result;
-      }
-
-      function sendDataToServer(data) {
-        fetch("/uploadData", {
-          method: "POST",
-          headers: {
-            "Content-Type": "application/json",
-          },
-          body: JSON.stringify({ data }),
-        })
-          .then((response) => response.json())
-          .then((data) => {
-            console.log("Server response:", data);
-          })
-          .catch((error) => {
-            console.error("Error:", error);
-          });
-      }
-
-      function dragOverHandler(e) {
-        e.preventDefault();
-      }
     </script>
-  </head>
-  <body>
-    <div
-      id="dropArea"
-      ondrop="handleDrop(event)"
-      ondragover="dragOverHandler(event)"
-    >
-      <p>Drag and drop an Excel file here (.xlsx)</p>
-    </div>
-    <ul id="messages"></ul>
-    <input id="message" autocomplete="off" />
-    <button onclick="sendMessage()">Send</button>
   </body>
 </html>

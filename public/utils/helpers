@@ -1,0 +1,26 @@
+// Function to create rows in the table
+function populateTable(data) {
+  const tableBody = document.getElementById("table-body");
+
+  data.forEach((person) => {
+    const row = document.createElement("tr");
+
+    const nameCell = document.createElement("td");
+    nameCell.textContent = person.name;
+    row.appendChild(nameCell);
+
+    const ageCell = document.createElement("td");
+    ageCell.textContent = person.age;
+    row.appendChild(ageCell);
+
+    const emailCell = document.createElement("td");
+    emailCell.textContent = person.email;
+    row.appendChild(emailCell);
+
+    tableBody.appendChild(row);
+  });
+}
+
+module.exports = {
+  populateTable,
+};
