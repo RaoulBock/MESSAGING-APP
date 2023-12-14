@@ -2,6 +2,7 @@ const express = require("express");
 const http = require("http");
 const socketIO = require("socket.io");
 const bodyParser = require("body-parser");
+const mysql = require("mysql");
 
 const app = express();
 const server = http.createServer(app);
@@ -10,6 +11,41 @@ const io = socketIO(server);
 app.use(express.static(__dirname + "/public"));
 // Middleware to parse JSON in the request body
 app.use(bodyParser.json());
+
+// Create a connection to the MySQL database
+const connection = mysql.createConnection({
+  host: "localhost",
+  user: "root",
+  password: "root",
+  database: "test",
+});
+
+// Connect to the database
+connection.connect((err) => {
+  if (err) {
+    console.error("Error connecting to database:", err);
+    return;
+  }
+  console.log("Connected to database");
+
+  // // Perform a simple query (e.g., selecting data)
+  // connection.query("SELECT * FROM your_table", (queryErr, results) => {
+  //   if (queryErr) {
+  //     console.error("Error executing query:", queryErr);
+  //     return;
+  //   }
+  //   console.log("Query results:", results);
+  // });
+
+  // Close the connection after querying
+  connection.end((endErr) => {
+    if (endErr) {
+      console.error("Error closing connection:", endErr);
+      return;
+    }
+    console.log("Connection closed");
+  });
+});
 
 io.on("connection", (socket) => {
   console.log("a user connected");

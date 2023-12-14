@@ -81,7 +81,7 @@
         Papa.parse(csvContent, {
           header: true,
           complete: function (results) {
-            console.log("CSV content in JSON:", results.data);
+            //console.log("CSV content in JSON:", results.data);
             sendDataToServer(results.data);
           },
         });
