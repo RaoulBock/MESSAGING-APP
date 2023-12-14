@@ -13,18 +13,27 @@
 
       function login() {
         phoneNumber = document.getElementById("phoneNumber").value;
-        // You can add validation for the phone number here
 
-        // Basic phone number validation
         if (!phoneNumber || isNaN(phoneNumber) || phoneNumber.length !== 10) {
           alert("Please enter a valid 10-digit phone number.");
           return;
         }
 
-        // Emit an event to the server to handle the login
-        socket.emit("login", phoneNumber);
+        const usernameInput = document.getElementById("usernameInput");
+        usernameInput.style.display = "block";
+        document.getElementById("phoneNumberInput").style.display = "none";
+      }
 
-        // Display the chat interface after successful login
+      function setUsername() {
+        username = document.getElementById("username").value;
+
+        if (!username || username.trim() === "") {
+          alert("Please enter a username.");
+          return;
+        }
+
+        socket.emit("login", { phoneNumber, username });
+
         document.getElementById("loginSection").style.display = "none";
         document.getElementById("chatSection").style.display = "block";
       }
@@ -51,7 +60,7 @@
       function displayMessage(msg) {
         const messages = document.getElementById("messages");
         const li = document.createElement("li");
-        li.innerHTML = `<strong>${msg.phoneNumber}:</strong> ${msg.message}`;
+        li.innerHTML = `<strong>${username}:</strong> ${msg.message}`;
         messages.appendChild(li);
       }
 
@@ -76,13 +85,21 @@
   </head>
   <body>
     <div id="loginSection">
-      <h3>Login with Phone Number</h3>
-      <input
-        id="phoneNumber"
-        type="text"
-        placeholder="Enter your phone number"
-      />
-      <button onclick="login()">Login</button>
+      <div id="phoneNumberInput">
+        <h3>Login with Phone Number</h3>
+        <input
+          id="phoneNumber"
+          type="text"
+          placeholder="Enter your phone number"
+        />
+        <button onclick="login()">Login</button>
+      </div>
+
+      <div id="usernameInput" style="display: none">
+        <h3>Enter Username</h3>
+        <input id="username" type="text" placeholder="Enter your username" />
+        <button onclick="setUsername()">Set Username</button>
+      </div>
     </div>
 
     <div id="chatSection" style="display: none">

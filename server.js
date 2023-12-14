@@ -36,14 +36,18 @@ let connectedUsers = {};
 io.on("connection", (socket) => {
   console.log("a user connected");
 
-  socket.on("login", (phoneNumber) => {
+  socket.on("login", ({ phoneNumber, username }) => {
     if (!phoneNumber || isNaN(phoneNumber) || phoneNumber.length !== 10) {
-      // Reject login if the phone number is invalid
       socket.emit("login error", "Please enter a valid 10-digit phone number.");
       return;
     }
-    // Store the phone number as the user's identifier
-    connectedUsers[socket.id] = phoneNumber;
+
+    if (!username || username.trim() === "") {
+      socket.emit("login error", "Please enter a username.");
+      return;
+    }
+
+    connectedUsers[socket.id] = { phoneNumber, username };
   });
 
   socket.on("disconnect", () => {
@@ -53,11 +57,8 @@ io.on("connection", (socket) => {
   });
 
   socket.on("chat message", (msg) => {
-    // Broadcast the message to everyone along with the sender's phone number
-    io.emit("chat message", {
-      phoneNumber: connectedUsers[socket.id],
-      message: msg,
-    });
+    const { phoneNumber, username } = connectedUsers[socket.id];
+    io.emit("chat message", { phoneNumber, username, message: msg });
   });
 });
 
