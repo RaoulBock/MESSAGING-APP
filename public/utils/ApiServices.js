@@ -1,12 +1,11 @@
 const ApiServices = {
-  on_login: async ({ phone_number, password, UserCookie }) => {
+  on_login: async ({ phone_number, UserCookie }) => {
     var myHeaders = new Headers();
     myHeaders.append("Content-Type", "application/json");
     myHeaders.append("Cookie", UserCookie);
 
     var raw = JSON.stringify({
       phone_number: phone_number,
-      password: password,
     });
 
     var requestOptions = {

@@ -1,77 +1,52 @@
+<!-- index.html -->
 <!DOCTYPE html>
 <html>
   <head>
-    <title>Chat App</title>
-    <script src="https://cdn.socket.io/4.3.2/socket.io.js"></script>
-    <script src="./utils/ApiServices.js"></script>
-    <style>
-      /* Add your CSS styles here */
-      #login {
-        text-align: center;
-        margin-top: 100px;
-      }
-      #chat {
-        display: none;
-      }
-    </style>
-  </head>
-  <body>
-    <div id="login">
-      <h2>Login</h2>
-      <input type="text" id="username" placeholder="Enter username" />
-      <input type="password" id="password" placeholder="Enter password" />
-      <button onclick="login()">Login</button>
-    </div>
-
-    <div id="chat">
-      <ul id="messages"></ul>
-      <input id="input" autocomplete="off" /><button onclick="sendMessage()">
-        Send
-      </button>
-    </div>
-
+    <title>Socket.io Chat App</title>
+    <script src="/socket.io/socket.io.js"></script>
     <script>
       const socket = io();
 
-      const login = async () => {
-        const user_password = document.getElementById("password").value;
-
-        try {
-          const response = await ApiServices.on_login({
-            phone_number: phone_number,
-          });
-
-          if (response) {
-            console.log(response);
-          } else {
-          }
-        } catch (err) {
-          console.log(err);
-        }
-
-        socket.emit("login", { username, password });
-
-        socket.on("login success", () => {
-          document.getElementById("login").style.display = "none";
-          document.getElementById("chat").style.display = "block";
-        });
-
-        socket.on("login failed", () => {
-          alert("Login failed. Please try again.");
-        });
-      };
-
       function sendMessage() {
-        const message = document.getElementById("input").value;
-        socket.emit("chat message", message);
-        document.getElementById("input").value = "";
+        const message = document.getElementById("message").value;
+        socket.emit("chat message", { type: "text", data: message }); // Send text message
+        document.getElementById("message").value = "";
+      }
+
+      function sendImage(event) {
+        const file = event.target.files[0];
+        const reader = new FileReader();
+
+        reader.onload = (e) => {
+          socket.emit("chat message", { type: "image", data: e.target.result }); // Send image data
+        };
+
+        if (file) {
+          reader.readAsDataURL(file);
+        }
       }
 
       socket.on("chat message", (msg) => {
-        const item = document.createElement("li");
-        item.textContent = msg;
-        document.getElementById("messages").appendChild(item);
+        const messages = document.getElementById("messages");
+        if (msg.type === "text") {
+          const li = document.createElement("li");
+          li.appendChild(document.createTextNode(msg.data));
+          messages.appendChild(li);
+        } else if (msg.type === "image") {
+          const img = document.createElement("img");
+          img.src = msg.data;
+          img.style.maxWidth = "200px"; // Set a maximum width for displayed images
+          const li = document.createElement("li");
+          li.appendChild(img);
+          messages.appendChild(li);
+        }
       });
     </script>
+  </head>
+  <body>
+    <ul id="messages"></ul>
+    <input id="message" autocomplete="off" />
+    <button onclick="sendMessage()">Send</button>
+    <input type="file" accept="image/*" onchange="sendImage(event)" />
   </body>
 </html>

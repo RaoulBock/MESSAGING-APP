@@ -27,64 +27,20 @@ const io = socketIO(server);
 const users = {}; // Store connected users
 const chatHistory = []; // Store chat history
 
-app.use(express.static(path.join(__dirname, "public")));
+// app.use(express.static(path.join(__dirname, "public")));
+app.use(express.static(__dirname + "/public"));
 app.use(cookieParser());
 
 io.on("connection", (socket) => {
-  console.log("A user connected");
-
-  // Check if the user has a stored cookie with login details
-  const storedUsername = socket.request.cookies
-    ? socket.request.cookies.username
-    : null;
-  const storedPassword = socket.request.cookies
-    ? socket.request.cookies.password
-    : null;
-
-  if (
-    (storedUsername === "user" && storedPassword === "pass") ||
-    (storedUsername === "username" && storedPassword === "password")
-  ) {
-    users[socket.id] = { id: socket.id, username: storedUsername }; // Store user information
-    socket.emit("login success");
-    // Emit chat history to the newly connected user
-    socket.emit("chat history", chatHistory);
-  }
-
-  socket.on("login", (userData) => {
-    // Simulated user authentication (replace this with your actual authentication logic)
-    if (
-      (userData.username === "user" && userData.password === "pass") ||
-      (userData.username === "username" && userData.password === "password")
-    ) {
-      // Store username and password in cookies
-      socket.emit("set cookie", {
-        username: userData.username,
-        password: userData.password,
-      });
-
-      users[socket.id] = { id: socket.id, username: userData.username }; // Store user information
-      socket.emit("login success");
-      // Emit chat history to the newly connected user
-      socket.emit("chat history", chatHistory);
-    } else {
-      socket.emit("login failed");
-    }
-  });
+  console.log("a user connected");
 
   socket.on("disconnect", () => {
-    console.log("A user disconnected");
-    delete users[socket.id]; // Remove the user on disconnect
+    console.log("user disconnected");
   });
 
   socket.on("chat message", (msg) => {
-    // Only allow authenticated users to send messages
-    if (users[socket.id]) {
-      console.log("message: " + msg);
-      const fullMessage = `${users[socket.id].username}: ${msg}`;
-      chatHistory.push(fullMessage); // Store the message in chat history
-      io.emit("chat message", fullMessage);
-    }
+    io.emit("chat message", msg); // Broadcast the message to everyone
+    console.log(msg);
   });
 });
 

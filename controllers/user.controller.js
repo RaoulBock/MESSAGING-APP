@@ -5,10 +5,10 @@ const config = require("../config/config");
 
 const create = async (req, res) => {
   const user = new User(req.body);
-  const { email } = req.body;
+  const { phone_number } = req.body;
 
   // Check if the user already exists
-  const existingUser = await User.findOne({ email });
+  const existingUser = await User.findOne({ phone_number });
 
   if (existingUser) {
     return res.status(409).json({
