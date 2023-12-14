@@ -31,16 +31,28 @@ const chatHistory = []; // Store chat history
 app.use(express.static(__dirname + "/public"));
 app.use(cookieParser());
 
+let connectedUsers = {};
+
 io.on("connection", (socket) => {
   console.log("a user connected");
 
+  socket.on("login", (phoneNumber) => {
+    // Store the phone number as the user's identifier
+    connectedUsers[socket.id] = phoneNumber;
+  });
+
   socket.on("disconnect", () => {
     console.log("user disconnected");
+    // Remove the user from connected users on disconnect
+    delete connectedUsers[socket.id];
   });
 
   socket.on("chat message", (msg) => {
-    io.emit("chat message", msg); // Broadcast the message to everyone
-    console.log(msg);
+    // Broadcast the message to everyone along with the sender's phone number
+    io.emit("chat message", {
+      phoneNumber: connectedUsers[socket.id],
+      message: msg,
+    });
   });
 });
 

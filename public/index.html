@@ -4,12 +4,27 @@
   <head>
     <title>Socket.io Chat App</title>
     <script src="/socket.io/socket.io.js"></script>
+
     <script>
       const socket = io();
 
+      let phoneNumber;
+
+      function login() {
+        phoneNumber = document.getElementById("phoneNumber").value;
+        // You can add validation for the phone number here
+
+        // Emit an event to the server to handle the login
+        socket.emit("login", phoneNumber);
+
+        // Display the chat interface after successful login
+        document.getElementById("loginSection").style.display = "none";
+        document.getElementById("chatSection").style.display = "block";
+      }
+
       function sendMessage() {
         const message = document.getElementById("message").value;
-        socket.emit("chat message", { type: "text", data: message }); // Send text message
+        socket.emit("chat message", { phoneNumber, message });
         document.getElementById("message").value = "";
       }
 
@@ -26,27 +41,49 @@
         }
       }
 
-      socket.on("chat message", (msg) => {
+      function displayMessage(msg) {
         const messages = document.getElementById("messages");
-        if (msg.type === "text") {
-          const li = document.createElement("li");
-          li.appendChild(document.createTextNode(msg.data));
-          messages.appendChild(li);
-        } else if (msg.type === "image") {
-          const img = document.createElement("img");
-          img.src = msg.data;
-          img.style.maxWidth = "200px"; // Set a maximum width for displayed images
-          const li = document.createElement("li");
-          li.appendChild(img);
-          messages.appendChild(li);
-        }
-      });
+        const li = document.createElement("li");
+        li.innerHTML = `<strong>${msg.phoneNumber}:</strong> ${msg.message}`;
+        messages.appendChild(li);
+      }
+
+      socket.on("chat message", displayMessage);
+
+      // socket.on("chat message", (msg) => {
+      //   const messages = document.getElementById("messages");
+      //   if (msg.type === "text") {
+      //     const li = document.createElement("li");
+      //     li.appendChild(document.createTextNode(msg.data));
+      //     messages.appendChild(li);
+      //   } else if (msg.type === "image") {
+      //     const img = document.createElement("img");
+      //     img.src = msg.data;
+      //     img.style.maxWidth = "200px"; // Set a maximum width for displayed images
+      //     const li = document.createElement("li");
+      //     li.appendChild(img);
+      //     messages.appendChild(li);
+      //   }
+      // });
     </script>
   </head>
   <body>
-    <ul id="messages"></ul>
-    <input id="message" autocomplete="off" />
-    <button onclick="sendMessage()">Send</button>
-    <input type="file" accept="image/*" onchange="sendImage(event)" />
+    <div id="loginSection">
+      <h3>Login with Phone Number</h3>
+      <input
+        id="phoneNumber"
+        type="text"
+        placeholder="Enter your phone number"
+      />
+      <button onclick="login()">Login</button>
+    </div>
+
+    <div id="chatSection" style="display: none">
+      <h3>Chat Interface</h3>
+      <ul id="messages"></ul>
+      <input id="message" autocomplete="off" />
+      <button onclick="sendMessage()">Send</button>
+      <input type="file" accept="image/*" onchange="sendImage(event)" />
+    </div>
   </body>
 </html>
