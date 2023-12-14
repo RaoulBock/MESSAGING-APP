@@ -2,17 +2,24 @@
 <!DOCTYPE html>
 <html>
   <head>
-    <title>Socket.io Chat App</title>
+    <title>MESSAGING APP</title>
     <script src="/socket.io/socket.io.js"></script>
 
     <script>
       const socket = io();
 
       let phoneNumber;
+      let username;
 
       function login() {
         phoneNumber = document.getElementById("phoneNumber").value;
         // You can add validation for the phone number here
+
+        // Basic phone number validation
+        if (!phoneNumber || isNaN(phoneNumber) || phoneNumber.length !== 10) {
+          alert("Please enter a valid 10-digit phone number.");
+          return;
+        }
 
         // Emit an event to the server to handle the login
         socket.emit("login", phoneNumber);

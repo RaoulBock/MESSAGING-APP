@@ -37,6 +37,11 @@ io.on("connection", (socket) => {
   console.log("a user connected");
 
   socket.on("login", (phoneNumber) => {
+    if (!phoneNumber || isNaN(phoneNumber) || phoneNumber.length !== 10) {
+      // Reject login if the phone number is invalid
+      socket.emit("login error", "Please enter a valid 10-digit phone number.");
+      return;
+    }
     // Store the phone number as the user's identifier
     connectedUsers[socket.id] = phoneNumber;
   });
