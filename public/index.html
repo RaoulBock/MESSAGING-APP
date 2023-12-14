@@ -2,112 +2,74 @@
 <!DOCTYPE html>
 <html>
   <head>
-    <title>MESSAGING APP</title>
+    <title>Socket.io Chat App</title>
     <script src="/socket.io/socket.io.js"></script>
-
+    <style>
+      #dropArea {
+        width: 300px;
+        height: 200px;
+        border: 2px dashed #aaa;
+        border-radius: 5px;
+        text-align: center;
+        padding: 20px;
+        margin: 20px auto;
+      }
+    </style>
     <script>
       const socket = io();
 
-      let phoneNumber;
-      let username;
-
-      function login() {
-        phoneNumber = document.getElementById("phoneNumber").value;
-
-        if (!phoneNumber || isNaN(phoneNumber) || phoneNumber.length !== 10) {
-          alert("Please enter a valid 10-digit phone number.");
-          return;
-        }
-
-        const usernameInput = document.getElementById("usernameInput");
-        usernameInput.style.display = "block";
-        document.getElementById("phoneNumberInput").style.display = "none";
-      }
-
-      function setUsername() {
-        username = document.getElementById("username").value;
-
-        if (!username || username.trim() === "") {
-          alert("Please enter a username.");
-          return;
-        }
-
-        socket.emit("login", { phoneNumber, username });
-
-        document.getElementById("loginSection").style.display = "none";
-        document.getElementById("chatSection").style.display = "block";
-      }
-
       function sendMessage() {
         const message = document.getElementById("message").value;
-        socket.emit("chat message", { phoneNumber, message });
+        socket.emit("chat message", message);
         document.getElementById("message").value = "";
       }
 
-      function sendImage(event) {
-        const file = event.target.files[0];
-        const reader = new FileReader();
+      socket.on("chat message", (msg) => {
+        const messages = document.getElementById("messages");
+        const li = document.createElement("li");
+        li.appendChild(document.createTextNode(msg));
+        messages.appendChild(li);
+      });
 
-        reader.onload = (e) => {
-          socket.emit("chat message", { type: "image", data: e.target.result }); // Send image data
-        };
+      function handleDrop(e) {
+        e.preventDefault();
+        const files = e.dataTransfer.files;
+        handleFiles(files);
+      }
 
-        if (file) {
-          reader.readAsDataURL(file);
+      function handleFiles(files) {
+        for (let i = 0; i < files.length; i++) {
+          const file = files[i];
+          if (
+            file.type ===
+              "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet" ||
+            file.type === "text/csv"
+          ) {
+            // Process the Excel file here, for example, you can upload it to a server or perform operations with it.
+            console.log("File name:", file.name);
+            console.log("File size:", file.size);
+            console.log("File type:", file.type);
+          } else {
+            alert("Please drop an Excel file (.xlsx).");
+          }
         }
       }
 
-      function displayMessage(msg) {
-        const messages = document.getElementById("messages");
-        const li = document.createElement("li");
-        li.innerHTML = `<strong>${username}:</strong> ${msg.message}`;
-        messages.appendChild(li);
+      function dragOverHandler(e) {
+        e.preventDefault();
       }
-
-      socket.on("chat message", displayMessage);
-
-      // socket.on("chat message", (msg) => {
-      //   const messages = document.getElementById("messages");
-      //   if (msg.type === "text") {
-      //     const li = document.createElement("li");
-      //     li.appendChild(document.createTextNode(msg.data));
-      //     messages.appendChild(li);
-      //   } else if (msg.type === "image") {
-      //     const img = document.createElement("img");
-      //     img.src = msg.data;
-      //     img.style.maxWidth = "200px"; // Set a maximum width for displayed images
-      //     const li = document.createElement("li");
-      //     li.appendChild(img);
-      //     messages.appendChild(li);
-      //   }
-      // });
     </script>
   </head>
   <body>
-    <div id="loginSection">
-      <div id="phoneNumberInput">
-        <h3>Login with Phone Number</h3>
-        <input
-          id="phoneNumber"
-          type="text"
-          placeholder="Enter your phone number"
-        />
-        <button onclick="login()">Login</button>
-      </div>
-
-      <div id="usernameInput" style="display: none">
-        <h3>Enter Username</h3>
-        <input id="username" type="text" placeholder="Enter your username" />
-        <button onclick="setUsername()">Set Username</button>
-      </div>
+    <div
+      id="dropArea"
+      ondrop="handleDrop(event)"
+      ondragover="dragOverHandler(event)"
+    >
+      <p>Drag and drop an Excel file here (.xlsx)</p>
     </div>
-
-    <div id="chatSection" style="display: none">
-      <h3>Chat Interface</h3>
-      <ul id="messages"></ul>
-      <input id="message" autocomplete="off" />
-      <button onclick="sendMessage()">Send</button>
-      <input type="file" accept="image/*" onchange="sendImage(event)" />
-    </div>
+    <ul id="messages"></ul>
+    <input id="message" autocomplete="off" />
+    <button onclick="sendMessage()">Send</button>
   </body>
 </html>
